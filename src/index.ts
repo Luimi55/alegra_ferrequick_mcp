@@ -104,6 +104,40 @@ const getServer = (): McpServer => {
         }
     )
 
+    server.tool(
+      'get_payment_received',
+      'Retrieve payment received information from Alegra POS with advanced filtering and pagination. Returns newest payments first by default.',
+      {
+        page: z.number().min(1).default(1)
+          .describe("Page number for pagination (default: 1)"),
+        limit: z.number().min(1).max(30).default(30)
+          .describe("Number of payments per page (default: 30, max: 30)"),
+        order_direction: z.enum(["ASC", "DESC"]).optional()
+          .describe("Sort order: ASC (ascending) or DESC (descending). Default: ASC (ascending)"),
+        order_field: z.enum(["id", "number", "date", "type"]).optional()
+          .describe("Field to sort by: id, number, date, or type. Default: date"),
+        type: z.enum(["in", "out"]).optional()
+          .describe("Filter payments by income or expenses. Use 'in' for income, 'out' for expenses."),
+        id: z.string().optional()
+          .describe("Comma-separated payment IDs (max 30). If specified, other parameters are ignored. Example: '123,456,789'"),
+        client_id: z.string().optional()
+          .describe("Filter income and/or expenses by client ID."),
+        conciliation_id: z.string().optional()
+          .describe("Conciliation ID. Allows retrieving payments associated with a conciliation."),
+      },
+      async (params) => {
+        const payment = await alegraClient.getPaymentsReceived(params);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(payment, null, 2),
+            },
+          ],
+        };
+      }
+    )
+
 
     return server;
     

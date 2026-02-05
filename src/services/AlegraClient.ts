@@ -28,6 +28,15 @@ interface InvoiceQueryParams extends PaginationParams {
   dueDate_beforeOrNow?: string;
 }
 
+interface PaymentsReceivedQueryParams extends PaginationParams {
+  order_direction?: "ASC" | "DESC";
+  order_field?: "id" | "number" | "date" | "type";
+  type?: "in" | "out";
+  id?: string;
+  client_id?: string;
+  conciliation_id?: string;
+}
+
 interface PaginationParams {
   page?: number;
   limit?: number;
@@ -137,18 +146,30 @@ async getSalesInvoices(params: InvoiceQueryParams = {}): Promise<any> {
 }
 
   // Pagos recibidos (Payments Received)
-  async getPaymentsReceived(params: PaginationParams = {}): Promise<any> {
-    const { start, limit } = this.buildPaginationParams(params);
-    const response = await this.client.get("/payments", {
-      params: {
-        start,
-        limit,
-        order_direction: "DESC",
-        order_field: "date",
-      },
-    });
-    return response.data;
-  }
+async getPaymentsReceived(params: PaymentsReceivedQueryParams = {}): Promise<any> {
+  const { page, limit, ...filterParams } = params;
+  const { start, limit: paginationLimit } = this.buildPaginationParams({ page, limit });
+  
+  // Build query parameters
+  const queryParams: Record<string, any> = {
+    start,
+    limit: paginationLimit,
+    order_direction: filterParams.order_direction || "DESC",
+    order_field: filterParams.order_field || "date",
+  };
+
+  // Add optional filter parameters only if they are provided
+  if (filterParams.type) queryParams.type = filterParams.type;
+  if (filterParams.id) queryParams.id = filterParams.id;
+  if (filterParams.client_id) queryParams.client_id = filterParams.client_id;
+  if (filterParams.conciliation_id) queryParams.conciliation_id = filterParams.conciliation_id;
+
+  const response = await this.client.get("/payments", {
+    params: queryParams,
+  });
+  
+  return response.data;
+}
 
   // Productos y servicios (Products and Services)
   async getProductsAndServices(
