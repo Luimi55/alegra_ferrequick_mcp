@@ -7,6 +7,27 @@ interface AlegraConfig {
   baseURL?: string;
 }
 
+interface InvoiceQueryParams extends PaginationParams {
+  order_direction?: "ASC" | "DESC";
+  order_field?: "id" | "name" | "date" | "dueDate" | "status";
+  id?: string;
+  date?: string;
+  dueDate?: string;
+  status?: string;
+  client_id?: string;
+  client_name?: string;
+  client_identification?: string;
+  item_id?: string;
+  date_after?: string;
+  date_afterOrNow?: string;
+  date_before?: string;
+  date_beforeOrNow?: string;
+  dueDate_after?: string;
+  dueDate_afterOrNow?: string;
+  dueDate_before?: string;
+  dueDate_beforeOrNow?: string;
+}
+
 interface PaginationParams {
   page?: number;
   limit?: number;
@@ -78,18 +99,42 @@ export class AlegraClient {
   }
 
   // Facturas de venta (Sales Invoices)
-  async getSalesInvoices(params: PaginationParams = {}): Promise<any> {
-    const { start, limit } = this.buildPaginationParams(params);
-    const response = await this.client.get("/invoices", {
-      params: {
-        start,
-        limit,
-        order_direction: "DESC",
-        order_field: "date",
-      },
-    });
-    return response.data;
-  }
+async getSalesInvoices(params: InvoiceQueryParams = {}): Promise<any> {
+  const { page, limit, ...filterParams } = params;
+  const { start, limit: paginationLimit } = this.buildPaginationParams({ page, limit });
+  
+  // Build query parameters
+  const queryParams: Record<string, any> = {
+    start,
+    limit: paginationLimit,
+    order_direction: filterParams.order_direction || "DESC",
+    order_field: filterParams.order_field || "date",
+  };
+
+  // Add optional filter parameters only if they are provided
+  if (filterParams.id) queryParams.id = filterParams.id;
+  if (filterParams.date) queryParams.date = filterParams.date;
+  if (filterParams.dueDate) queryParams.dueDate = filterParams.dueDate;
+  if (filterParams.status) queryParams.status = filterParams.status;
+  if (filterParams.client_id) queryParams.client_id = filterParams.client_id;
+  if (filterParams.client_name) queryParams.client_name = filterParams.client_name;
+  if (filterParams.client_identification) queryParams.client_identification = filterParams.client_identification;
+  if (filterParams.item_id) queryParams.item_id = filterParams.item_id;
+  if (filterParams.date_after) queryParams.date_after = filterParams.date_after;
+  if (filterParams.date_afterOrNow) queryParams.date_afterOrNow = filterParams.date_afterOrNow;
+  if (filterParams.date_before) queryParams.date_before = filterParams.date_before;
+  if (filterParams.date_beforeOrNow) queryParams.date_beforeOrNow = filterParams.date_beforeOrNow;
+  if (filterParams.dueDate_after) queryParams.dueDate_after = filterParams.dueDate_after;
+  if (filterParams.dueDate_afterOrNow) queryParams.dueDate_afterOrNow = filterParams.dueDate_afterOrNow;
+  if (filterParams.dueDate_before) queryParams.dueDate_before = filterParams.dueDate_before;
+  if (filterParams.dueDate_beforeOrNow) queryParams.dueDate_beforeOrNow = filterParams.dueDate_beforeOrNow;
+
+  const response = await this.client.get("/invoices", {
+    params: queryParams,
+  });
+  
+  return response.data;
+}
 
   // Pagos recibidos (Payments Received)
   async getPaymentsReceived(params: PaginationParams = {}): Promise<any> {
