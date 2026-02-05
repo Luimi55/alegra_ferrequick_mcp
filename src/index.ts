@@ -138,6 +138,53 @@ const getServer = (): McpServer => {
       }
     )
 
+    // Tool definition for purchase invoices
+server.tool(
+  'get_purchase_invoices',
+  'Retrieve purchase invoices (bills) from Alegra POS with advanced filtering and pagination. Returns newest invoices first by default.',
+  {
+    page: z.number().min(1).default(1)
+      .describe("Page number for pagination (default: 1)"),
+    limit: z.number().min(1).max(30).default(30)
+      .describe("Number of purchase invoices per page (default: 30, max: 30)"),
+    order_direction: z.enum(["ASC", "DESC"]).optional()
+      .describe("Sort order: ASC (ascending) or DESC (descending). Default: ASC (ascending)"),
+    order_field: z.enum(["date", "name", "dueDate"]).optional()
+      .describe("Field to sort by: date, name, or dueDate. Default: date"),
+    billNumber: z.string().optional()
+      .describe("Filter by purchase invoice number. Returns invoices where the number matches totally or partially."),
+    client_name: z.string().optional()
+      .describe("Filter by client name. Returns purchase invoices where client name matches totally or partially."),
+    date: z.string().optional()
+      .describe("Filter by exact creation date. Format: YYYY-MM-DD. Example: '2024-01-15'"),
+    dueDate: z.string().optional()
+      .describe("Filter by exact due date. Format: YYYY-MM-DD. Example: '2024-02-15'"),
+    status: z.string().optional()
+      .describe("Filter by status. Options: 'open', 'closed', 'void'. Use comma-separated for multiple."),
+    item_id: z.string().optional()
+      .describe("Filter purchase invoices by item ID."),
+    client_id: z.string().optional()
+      .describe("Filter purchase invoices by client (supplier) ID."),
+    provider_name: z.string().optional()
+      .describe("Filter by provider name. Returns invoices where provider name matches totally or partially."),
+    purchaseOrder_id: z.string().optional()
+      .describe("Filter purchase invoices by purchase order ID."),
+    type: z.enum(["bill", "supportDocument", "all"]).optional()
+      .describe("Filter by document type. Options: 'bill' (purchase invoices), 'supportDocument' (support documents), 'all' (both types). Default: bill"),
+  },
+  async (params) => {
+    const purchaseInvoices = await alegraClient.getPurchaseInvoices(params);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(purchaseInvoices, null, 2),
+        },
+      ],
+    };
+  }
+)
+
 
     return server;
     

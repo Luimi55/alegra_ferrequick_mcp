@@ -37,6 +37,21 @@ interface PaymentsReceivedQueryParams extends PaginationParams {
   conciliation_id?: string;
 }
 
+interface PurchaseInvoicesQueryParams extends PaginationParams {
+  order_direction?: "ASC" | "DESC";
+  order_field?: "date" | "name" | "dueDate";
+  billNumber?: string;
+  client_name?: string;
+  date?: string;
+  dueDate?: string;
+  status?: string;
+  item_id?: string;
+  client_id?: string;
+  provider_name?: string;
+  purchaseOrder_id?: string;
+  type?: "bill" | "supportDocument" | "all";
+}
+
 interface PaginationParams {
   page?: number;
   limit?: number;
@@ -171,6 +186,37 @@ async getPaymentsReceived(params: PaymentsReceivedQueryParams = {}): Promise<any
   return response.data;
 }
 
+async getPurchaseInvoices(params: PurchaseInvoicesQueryParams = {}): Promise<any> {
+  const { page, limit, ...filterParams } = params;
+  const { start, limit: paginationLimit } = this.buildPaginationParams({ page, limit });
+  
+  // Build query parameters
+  const queryParams: Record<string, any> = {
+    start,
+    limit: paginationLimit,
+    order_direction: filterParams.order_direction || "DESC",
+    order_field: filterParams.order_field || "date",
+  };
+
+  // Add optional filter parameters only if they are provided
+  if (filterParams.billNumber) queryParams.billNumber = filterParams.billNumber;
+  if (filterParams.client_name) queryParams.client_name = filterParams.client_name;
+  if (filterParams.date) queryParams.date = filterParams.date;
+  if (filterParams.dueDate) queryParams.dueDate = filterParams.dueDate;
+  if (filterParams.status) queryParams.status = filterParams.status;
+  if (filterParams.item_id) queryParams.item_id = filterParams.item_id;
+  if (filterParams.client_id) queryParams.client_id = filterParams.client_id;
+  if (filterParams.provider_name) queryParams.provider_name = filterParams.provider_name;
+  if (filterParams.purchaseOrder_id) queryParams.purchaseOrder_id = filterParams.purchaseOrder_id;
+  if (filterParams.type) queryParams.type = filterParams.type;
+
+  const response = await this.client.get("/bills", {
+    params: queryParams,
+  });
+  
+  return response.data;
+}
+
   // Productos y servicios (Products and Services)
   async getProductsAndServices(
     params: PaginationParams = {}
@@ -228,19 +274,7 @@ async getPaymentsReceived(params: PaymentsReceivedQueryParams = {}): Promise<any
     return response.data;
   }
 
-  // Factura proveedores (Purchase Invoices / Bills)
-  async getPurchaseInvoices(params: PaginationParams = {}): Promise<any> {
-    const { start, limit } = this.buildPaginationParams(params);
-    const response = await this.client.get("/bills", {
-      params: {
-        start,
-        limit,
-        order_direction: "DESC",
-        order_field: "date",
-      },
-    });
-    return response.data;
-  }
+
 
   // Pagos/Gastos (Payments/Expenses)
   async getExpenses(params: PaginationParams = {}): Promise<any> {
