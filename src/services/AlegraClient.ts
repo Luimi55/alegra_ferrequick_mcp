@@ -26,6 +26,7 @@ interface InvoiceQueryParams extends PaginationParams {
   dueDate_afterOrNow?: string;
   dueDate_before?: string;
   dueDate_beforeOrNow?: string;
+  numberTemplate_fullNumber?: string;
 }
 
 interface PaymentsReceivedQueryParams extends PaginationParams {
@@ -191,6 +192,7 @@ async getSalesInvoices(params: InvoiceQueryParams = {}): Promise<any> {
   if (filterParams.dueDate_afterOrNow) queryParams.dueDate_afterOrNow = filterParams.dueDate_afterOrNow;
   if (filterParams.dueDate_before) queryParams.dueDate_before = filterParams.dueDate_before;
   if (filterParams.dueDate_beforeOrNow) queryParams.dueDate_beforeOrNow = filterParams.dueDate_beforeOrNow;
+  if (filterParams.numberTemplate_fullNumber) queryParams.numberTemplate_fullNumber = filterParams.numberTemplate_fullNumber;
 
   const response = await this.client.get("/invoices", {
     params: queryParams,

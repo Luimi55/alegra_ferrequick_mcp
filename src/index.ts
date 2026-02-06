@@ -75,6 +75,8 @@ const getServer = (): McpServer => {
       .describe("Filter invoices with due date before this date (exclusive). Format: YYYY-MM-DD. Example: '2024-12-31'"),
     dueDate_beforeOrNow: z.string().optional()
       .describe("Filter invoices with due date up to today. Format: YYYY-MM-DD. Example: '2024-12-31'"),
+    numberTemplate_fullNumber: z.string().optional()
+      .describe("Returns all sales invoices whose numbering contains the value provided in this parameter. It is the same as the NCF"),
   },
       async (params) => {
 
