@@ -364,24 +364,24 @@ async getBankAccounts(params: BankAccountsQueryParams = {}): Promise<any> {
 }
 
   // Libro de diario (Journal Entries)
-  async getJournalEntries(params: PaginationParams = {}): Promise<any> {
-    const { start, limit } = this.buildPaginationParams(params);
-    const response = await this.client.get("/journal-entries", {
-      params: {
-        start,
-        limit,
-        order_direction: "DESC",
-        order_field: "date",
-      },
-    });
-    return response.data;
-  }
+  // async getJournalEntries(params: PaginationParams = {}): Promise<any> {
+  //   const { start, limit } = this.buildPaginationParams(params);
+  //   const response = await this.client.get("/journal-entries", {
+  //     params: {
+  //       start,
+  //       limit,
+  //       order_direction: "DESC",
+  //       order_field: "date",
+  //     },
+  //   });
+  //   return response.data;
+  // }
 
   // Helper method to get a specific sales invoice by ID
-  async getSalesInvoiceById(id: string): Promise<any> {
-    const response = await this.client.get(`/invoices/${id}`);
-    return response.data;
-  }
+  // async getSalesInvoiceById(id: string): Promise<any> {
+  //   const response = await this.client.get(`/invoices/${id}`);
+  //   return response.data;
+  // }
 
   // Helper method to get a specific product by ID
   async getProductById(id: string): Promise<any> {
@@ -396,10 +396,10 @@ async getBankAccounts(params: BankAccountsQueryParams = {}): Promise<any> {
   }
 
   // Helper method to get a specific journal entry by ID
-  async getJournalEntryById(id: string): Promise<any> {
-    const response = await this.client.get(`/journal-entries/${id}`);
-    return response.data;
-  }
+  // async getJournalEntryById(id: string): Promise<any> {
+  //   const response = await this.client.get(`/journal-entries/${id}`);
+  //   return response.data;
+  // }
 }
 
 export default AlegraClient;

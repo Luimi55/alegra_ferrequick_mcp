@@ -341,6 +341,53 @@ server.tool(
 )
 
 
+
+// Tool definition for getting a product/service by ID
+server.tool(
+  'get_product_by_id',
+  'Retrieve a specific product or service from Alegra POS by its ID.',
+  {
+    id: z.string()
+      .describe("The ID of the product or service to retrieve."),
+  },
+  async ({ id }) => {
+    const product = await alegraClient.getProductById(id);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(product, null, 2),
+        },
+      ],
+    };
+  }
+)
+
+
+
+
+// Tool definition for getting a purchase invoice by ID
+server.tool(
+  'get_purchase_invoice_by_id',
+  'Retrieve a specific purchase invoice (bill) from Alegra POS by its ID.',
+  {
+    id: z.string()
+      .describe("The ID of the purchase invoice to retrieve."),
+  },
+  async ({ id }) => {
+    const purchaseInvoice = await alegraClient.getPurchaseInvoiceById(id);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(purchaseInvoice, null, 2),
+        },
+      ],
+    };
+  }
+)
+
+
     return server;
     
 }
