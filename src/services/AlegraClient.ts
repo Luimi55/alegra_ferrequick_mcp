@@ -92,6 +92,10 @@ interface BankAccountsQueryParams extends PaginationParams {
   includeBalance?: boolean;
 }
 
+interface CompanyQueryParams {
+  fields?: string;
+}
+
 interface PaginationParams {
   page?: number;
   limit?: number;
@@ -400,6 +404,22 @@ async getBankAccounts(params: BankAccountsQueryParams = {}): Promise<any> {
   //   const response = await this.client.get(`/journal-entries/${id}`);
   //   return response.data;
   // }
+
+
+  async getCompany(params: CompanyQueryParams = {}): Promise<any> {
+  const queryParams: Record<string, any> = {};
+
+  // Add optional fields parameter if provided
+  if (params.fields) {
+    queryParams.fields = params.fields;
+  }
+
+  const response = await this.client.get("/company", {
+    params: queryParams,
+  });
+  
+  return response.data;
+}
 }
 
 export default AlegraClient;

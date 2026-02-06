@@ -388,6 +388,28 @@ server.tool(
 )
 
 
+// Tool definition for getting company information
+server.tool(
+  'get_company',
+  'Retrieve company information registered in the Alegra account. Use it to get more context about the business.',
+  {
+    fields: z.string().optional()
+      .describe("Additional fields to include in the response. Multiple options can be selected separated by comma. Options: 'origin', 'interfaceSettings', 'certificate', 'invoiceText', 'stampReceptionEmail', 'sector', 'uuid', 'country', 'mandateSignatureUrl', 'swornDeclarationUrl', 'manifestSignature', 'simple', 'status', 'lastActivityDate', 'sectorKey'."),
+  },
+  async (params) => {
+    const company = await alegraClient.getCompany(params);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(company, null, 2),
+        },
+      ],
+    };
+  }
+)
+
+
     return server;
     
 }
