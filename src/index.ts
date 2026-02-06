@@ -27,7 +27,7 @@ async function getCredentials() {
 
 const getServer = (): McpServer => {
       const server = new McpServer({
-        name: "Alegra MCP Server",
+        name: "Alegra MCP Server for Ferrequick, a hardware store",
         version: "1.0.0",
     });
 
