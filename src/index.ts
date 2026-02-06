@@ -186,6 +186,56 @@ server.tool(
 )
 
 
+// Tool definition for products and services
+server.tool(
+  'get_products_and_services',
+  'Retrieve products and services from Alegra POS with advanced filtering and pagination. Returns items in ascending order by default.',
+  {
+    page: z.number().min(1).default(1)
+      .describe("Page number for pagination (default: 1)"),
+    limit: z.number().min(1).max(30).default(30)
+      .describe("Number of items per page (default: 30, max: 30)"),
+    order_direction: z.enum(["ASC", "DESC"]).optional()
+      .describe("Sort order: ASC (ascending) or DESC (descending). Default: ASC (ascending)"),
+    order_field: z.enum(["name", "id", "reference", "description"]).optional()
+      .describe("Field to sort by: name, id, reference, or description. Default: name"),
+    query: z.string().optional()
+      .describe("Text string to search for products/services whose name or reference contains this text. Example: 'cuaderno'"),
+    idWarehouse: z.string().optional()
+      .describe("Warehouse/storage ID. If specified, only non-inventoriable products and inventoriable products in this warehouse are returned."),
+    name: z.string().optional()
+      .describe("Product or service name. Maximum length: 150 characters."),
+    price: z.string().optional()
+      .describe("Filter by price. Can be used to find items with specific pricing."),
+    description: z.string().optional()
+      .describe("Product or service description. Maximum length: 500 characters."),
+    priceList_id: z.string().optional()
+      .describe("Filter by price list ID."),
+    idItemCategory: z.string().optional()
+      .describe("Item category ID. If specified, only products associated with this category are returned."),
+    type: z.enum(["simple", "kit"]).optional()
+      .describe("Product type. Options: 'simple' or 'kit'"),
+    status: z.enum(["active", "inactive"]).optional()
+      .describe("Product or service status. Options: 'active' or 'inactive'. Note: An inactive product/service cannot be found; to edit it, send it with status 'active'."),
+    inventariable: z.boolean().optional()
+      .describe("Filter inventoriable items. Set to true to get only inventoriable items."),
+    mode: z.enum(["advanced", "simple"]).optional()
+      .describe("Response mode. 'simple' returns items excluding certain attributes. 'advanced' returns the item without excluding any attributes. Default: advanced"),
+  },
+  async (params) => {
+    const items = await alegraClient.getProductsAndServices(params);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(items, null, 2),
+        },
+      ],
+    };
+  }
+)
+
+
     return server;
     
 }

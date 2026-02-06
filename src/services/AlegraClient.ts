@@ -52,6 +52,22 @@ interface PurchaseInvoicesQueryParams extends PaginationParams {
   type?: "bill" | "supportDocument" | "all";
 }
 
+interface ProductsAndServicesQueryParams extends PaginationParams {
+  order_direction?: "ASC" | "DESC";
+  order_field?: "name" | "id" | "reference" | "description";
+  query?: string;
+  idWarehouse?: string;
+  name?: string;
+  price?: string;
+  description?: string;
+  priceList_id?: string;
+  idItemCategory?: string;
+  type?: "simple" | "kit";
+  status?: "active" | "inactive";
+  inventariable?: boolean;
+  mode?: "advanced" | "simple";
+}
+
 interface PaginationParams {
   page?: number;
   limit?: number;
@@ -217,20 +233,37 @@ async getPurchaseInvoices(params: PurchaseInvoicesQueryParams = {}): Promise<any
   return response.data;
 }
 
-  // Productos y servicios (Products and Services)
-  async getProductsAndServices(
-    params: PaginationParams = {}
-  ): Promise<unknown> {
-    const { start, limit } = this.buildPaginationParams(params);
-    const response = await this.client.get("/items", {
-      params: {
-        start,
-        limit,
-        order_direction: "DESC",
-      },
-    });
-    return response.data;
-  }
+async getProductsAndServices(params: ProductsAndServicesQueryParams = {}): Promise<any> {
+  const { page, limit, ...filterParams } = params;
+  const { start, limit: paginationLimit } = this.buildPaginationParams({ page, limit });
+  
+  // Build query parameters
+  const queryParams: Record<string, any> = {
+    start,
+    limit: paginationLimit,
+    order_direction: filterParams.order_direction || "ASC",
+  };
+
+  // Add optional filter parameters only if they are provided
+  if (filterParams.order_field) queryParams.order_field = filterParams.order_field;
+  if (filterParams.query) queryParams.query = filterParams.query;
+  if (filterParams.idWarehouse) queryParams.idWarehouse = filterParams.idWarehouse;
+  if (filterParams.name) queryParams.name = filterParams.name;
+  if (filterParams.price) queryParams.price = filterParams.price;
+  if (filterParams.description) queryParams.description = filterParams.description;
+  if (filterParams.priceList_id) queryParams.priceList_id = filterParams.priceList_id;
+  if (filterParams.idItemCategory) queryParams.idItemCategory = filterParams.idItemCategory;
+  if (filterParams.type) queryParams.type = filterParams.type;
+  if (filterParams.status) queryParams.status = filterParams.status;
+  if (filterParams.inventariable !== undefined) queryParams.inventariable = filterParams.inventariable;
+  if (filterParams.mode) queryParams.mode = filterParams.mode;
+
+  const response = await this.client.get("/items", {
+    params: queryParams,
+  });
+  
+  return response.data;
+}
 
   // Valor de inventario (Inventory Value)
   async getInventoryValue(params: PaginationParams = {}): Promise<any> {
