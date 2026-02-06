@@ -68,6 +68,14 @@ interface ProductsAndServicesQueryParams extends PaginationParams {
   mode?: "advanced" | "simple";
 }
 
+interface InventoryAdjustmentsQueryParams extends PaginationParams {
+  order_direction?: "ASC" | "DESC";
+  order_field?: "id" | "number" | "date" | "observations" | "warehouse_name";
+  number?: number;
+  date?: string;
+  warehouse_id?: string;
+}
+
 interface PaginationParams {
   page?: number;
   limit?: number;
@@ -265,35 +273,30 @@ async getProductsAndServices(params: ProductsAndServicesQueryParams = {}): Promi
   return response.data;
 }
 
-  // Valor de inventario (Inventory Value)
-  async getInventoryValue(params: PaginationParams = {}): Promise<any> {
-    const { start, limit } = this.buildPaginationParams(params);
-    const response = await this.client.get("/items", {
-      params: {
-        start,
-        limit,
-        type: "product",
-        order_direction: "DESC",
-      },
-    });
-    return response.data;
-  }
 
-  // Ajustes de inventario (Inventory Adjustments)
-  async getInventoryAdjustments(
-    params: PaginationParams = {}
-  ): Promise<unknown> {
-    const { start, limit } = this.buildPaginationParams(params);
-    const response = await this.client.get("/inventory-adjustments", {
-      params: {
-        start,
-        limit,
-        order_direction: "DESC",
-        order_field: "date",
-      },
-    });
-    return response.data;
-  }
+async getInventoryAdjustments(params: InventoryAdjustmentsQueryParams = {}): Promise<any> {
+  const { page, limit, ...filterParams } = params;
+  const { start, limit: paginationLimit } = this.buildPaginationParams({ page, limit });
+  
+  // Build query parameters
+  const queryParams: Record<string, any> = {
+    start,
+    limit: paginationLimit,
+    order_direction: filterParams.order_direction || "DESC",
+    order_field: filterParams.order_field || "date",
+  };
+
+  // Add optional filter parameters only if they are provided
+  if (filterParams.number !== undefined) queryParams.number = filterParams.number;
+  if (filterParams.date) queryParams.date = filterParams.date;
+  if (filterParams.warehouse_id) queryParams.warehouse_id = filterParams.warehouse_id;
+
+  const response = await this.client.get("/inventory-adjustments", {
+    params: queryParams,
+  });
+  
+  return response.data;
+}
 
   // Almacenes (Warehouses)
   async getWarehouses(params: PaginationParams = {}): Promise<any> {

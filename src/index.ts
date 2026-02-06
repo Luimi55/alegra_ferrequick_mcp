@@ -236,6 +236,40 @@ server.tool(
 )
 
 
+// Tool definition for inventory adjustments
+server.tool(
+  'get_inventory_adjustments',
+  'Retrieve inventory adjustments from Alegra POS with advanced filtering and pagination. Returns newest adjustments first by default.',
+  {
+    page: z.number().min(1).default(1)
+      .describe("Page number for pagination (default: 1)"),
+    limit: z.number().min(1).max(30).default(30)
+      .describe("Number of inventory adjustments per page (default: 30, max: 30)"),
+    order_direction: z.enum(["ASC", "DESC"]).optional()
+      .describe("Sort order: ASC (ascending) or DESC (descending). Default: ASC (ascending)"),
+    order_field: z.enum(["id", "number", "date", "observations", "warehouse_name"]).optional()
+      .describe("Field to sort by: id, number, date, observations, warehouse_name. Default: date"),
+    number: z.number().int().optional()
+      .describe("Filter by adjustment ID number."),
+    date: z.string().optional()
+      .describe("Filter adjustments by date. Format: YYYY-MM-DD. Example: '2024-01-15'"),
+    warehouse_id: z.string().optional()
+      .describe("Filter adjustments by warehouse ID."),
+  },
+  async (params) => {
+    const adjustments = await alegraClient.getInventoryAdjustments(params);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(adjustments, null, 2),
+        },
+      ],
+    };
+  }
+)
+
+
     return server;
     
 }
