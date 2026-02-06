@@ -83,6 +83,14 @@ interface WarehousesQueryParams extends PaginationParams {
   status?: "active" | "inactive";
 }
 
+interface BankAccountsQueryParams extends PaginationParams {
+  order_direction?: "ASC" | "DESC";
+  order_field?: "id" | "date";
+  fields?: "deletable" | "journal" | "lastMovementDate" | "category";
+  includeInactive?: boolean;
+  includeBalance?: boolean;
+}
+
 interface PaginationParams {
   page?: number;
   limit?: number;
@@ -329,32 +337,29 @@ async getWarehouses(params: WarehousesQueryParams = {}): Promise<any> {
 }
 
 
+async getBankAccounts(params: BankAccountsQueryParams = {}): Promise<any> {
+  const { page, limit, ...filterParams } = params;
+  const { start, limit: paginationLimit } = this.buildPaginationParams({ page, limit });
+  
+  // Build query parameters
+  const queryParams: Record<string, any> = {
+    start,
+    limit: paginationLimit,
+  };
 
-  // Pagos/Gastos (Payments/Expenses)
-  async getExpenses(params: PaginationParams = {}): Promise<any> {
-    const { start, limit } = this.buildPaginationParams(params);
-    const response = await this.client.get("/bill-payments", {
-      params: {
-        start,
-        limit,
-        order_direction: "DESC",
-        order_field: "date",
-      },
-    });
-    return response.data;
-  }
+  // Add optional filter parameters only if they are provided
+  if (filterParams.order_direction) queryParams.order_direction = filterParams.order_direction;
+  if (filterParams.order_field) queryParams.order_field = filterParams.order_field;
+  if (filterParams.fields) queryParams.fields = filterParams.fields;
+  if (filterParams.includeInactive !== undefined) queryParams.includeInactive = filterParams.includeInactive;
+  if (filterParams.includeBalance !== undefined) queryParams.includeBalance = filterParams.includeBalance;
 
-  // Bancos y cajas (Banks and Cash Registers)
-  async getBankAccounts(params: PaginationParams = {}): Promise<any> {
-    const { start, limit } = this.buildPaginationParams(params);
-    const response = await this.client.get("/bank-accounts", {
-      params: {
-        start,
-        limit,
-      },
-    });
-    return response.data;
-  }
+  const response = await this.client.get("/bank-accounts", {
+    params: queryParams,
+  });
+  
+  return response.data;
+}
 
   // Libro de diario (Journal Entries)
   async getJournalEntries(params: PaginationParams = {}): Promise<any> {

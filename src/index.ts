@@ -303,6 +303,42 @@ server.tool(
 )
 
 
+
+
+// Tool definition for bank accounts
+server.tool(
+  'get_bank_accounts',
+  'Retrieve bank accounts (banks and cash registers) from Alegra POS with advanced filtering and pagination.',
+  {
+    page: z.number().min(1).default(1)
+      .describe("Page number for pagination (default: 1)"),
+    limit: z.number().min(1).max(30).default(30)
+      .describe("Number of bank accounts per page (default: 30, max: 30)"),
+    order_direction: z.enum(["ASC", "DESC"]).optional()
+      .describe("Sort order: ASC (ascending) or DESC (descending). Default: ASC (ascending)"),
+    order_field: z.enum(["id", "date"]).optional()
+      .describe("Field to sort by: id or date. Default: id"),
+    fields: z.enum(["deletable", "journal", "lastMovementDate", "category"]).optional()
+      .describe("Get additional information. Options: 'deletable' (validate if account can be deleted), 'journal' (accounting entries), 'lastMovementDate' (last movement date), 'category' (account categories). Example: 'journal'"),
+    includeInactive: z.boolean().optional()
+      .describe("Include inactive bank accounts. Set to true to include accounts that are inactive."),
+    includeBalance: z.boolean().optional()
+      .describe("Include account balances. Set to true to include the balance of each bank account."),
+  },
+  async (params) => {
+    const bankAccounts = await alegraClient.getBankAccounts(params);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(bankAccounts, null, 2),
+        },
+      ],
+    };
+  }
+)
+
+
     return server;
     
 }
