@@ -7,11 +7,12 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { AlegraClient } from "./services/AlegraClient.ts";
 import {safeParseResponseToOriginalInvoice, parseInvoices } from "./helpers/InvoiceParser.ts";
 import type{ OriginalInvoice } from "./models/invoice/OriginalInvoice.ts";
+import 'dotenv/config';
 
 
 let alegraClient: AlegraClient = null as any;
 
-const keyVaultUrl = 'https://vaultferrequick.vault.azure.net/';
+const keyVaultUrl = process.env.VAULT_BASE_URL || "";
 const azureCredentials = new DefaultAzureCredential();
 const keyVaultClient = new SecretClient(keyVaultUrl, azureCredentials);
 
@@ -417,7 +418,6 @@ server.tool(
 const main = async () => {
     const transport = new StdioServerTransport();
     const creds = await getCredentials();
-    console.log("Retrieved credentials:", creds);
     alegraClient = new AlegraClient({
         username: creds.user,
         apiToken: creds.apiKey,
