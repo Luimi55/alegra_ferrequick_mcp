@@ -270,6 +270,39 @@ server.tool(
 )
 
 
+
+// Tool definition for warehouses
+server.tool(
+  'get_warehouses',
+  'Retrieve warehouses from Alegra POS with advanced filtering and pagination.',
+  {
+    page: z.number().min(1).default(1)
+      .describe("Page number for pagination (default: 1)"),
+    limit: z.number().min(1).max(30).default(30)
+      .describe("Number of warehouses per page (default: 30, max: 30)"),
+    order_direction: z.enum(["ASC", "DESC"]).optional()
+      .describe("Sort order: ASC (ascending) or DESC (descending). Default: ASC (ascending)"),
+    order_field: z.string().optional()
+      .describe("Field to sort by."),
+    name: z.string().optional()
+      .describe("Filter by warehouse name."),
+    status: z.enum(["active", "inactive"]).optional()
+      .describe("Filter by warehouse status. Options: 'active' or 'inactive'."),
+  },
+  async (params) => {
+    const warehouses = await alegraClient.getWarehouses(params);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(warehouses, null, 2),
+        },
+      ],
+    };
+  }
+)
+
+
     return server;
     
 }

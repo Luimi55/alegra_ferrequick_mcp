@@ -76,6 +76,13 @@ interface InventoryAdjustmentsQueryParams extends PaginationParams {
   warehouse_id?: string;
 }
 
+interface WarehousesQueryParams extends PaginationParams {
+  order_direction?: "ASC" | "DESC";
+  order_field?: string;
+  name?: string;
+  status?: "active" | "inactive";
+}
+
 interface PaginationParams {
   page?: number;
   limit?: number;
@@ -298,17 +305,28 @@ async getInventoryAdjustments(params: InventoryAdjustmentsQueryParams = {}): Pro
   return response.data;
 }
 
-  // Almacenes (Warehouses)
-  async getWarehouses(params: PaginationParams = {}): Promise<any> {
-    const { start, limit } = this.buildPaginationParams(params);
-    const response = await this.client.get("/warehouses", {
-      params: {
-        start,
-        limit,
-      },
-    });
-    return response.data;
-  }
+async getWarehouses(params: WarehousesQueryParams = {}): Promise<any> {
+  const { page, limit, ...filterParams } = params;
+  const { start, limit: paginationLimit } = this.buildPaginationParams({ page, limit });
+  
+  // Build query parameters
+  const queryParams: Record<string, any> = {
+    start,
+    limit: paginationLimit,
+  };
+
+  // Add optional filter parameters only if they are provided
+  if (filterParams.order_direction) queryParams.order_direction = filterParams.order_direction;
+  if (filterParams.order_field) queryParams.order_field = filterParams.order_field;
+  if (filterParams.name) queryParams.name = filterParams.name;
+  if (filterParams.status) queryParams.status = filterParams.status;
+
+  const response = await this.client.get("/warehouses", {
+    params: queryParams,
+  });
+  
+  return response.data;
+}
 
 
 
