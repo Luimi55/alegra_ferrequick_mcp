@@ -1,22 +1,24 @@
 import { SecretClient } from "@azure/keyvault-secrets";
 import { DefaultAzureCredential } from "@azure/identity";
-// import { ModelContextProtocol } from "@modelcontextprotocol/sdk";
 import { z } from "zod";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { AlegraClient } from "./services/AlegraClient.ts";
 import {safeParseResponseToOriginalInvoice, parseInvoices } from "./helpers/InvoiceParser.ts";
 import type{ OriginalInvoice } from "./models/invoice/OriginalInvoice.ts";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import type{ Request, Response } from 'express';
+import express from 'express';
 import 'dotenv/config';
 
 
 let alegraClient: AlegraClient = null as any;
 
-const keyVaultUrl = process.env.VAULT_BASE_URL || "";
-const azureCredentials = new DefaultAzureCredential();
-const keyVaultClient = new SecretClient(keyVaultUrl, azureCredentials);
-
 async function getCredentials() {
+  const keyVaultUrl = process.env.VAULT_BASE_URL || "";
+  const azureCredentials = new DefaultAzureCredential();
+  const keyVaultClient = new SecretClient(keyVaultUrl, azureCredentials);
+
   const apiKey = await keyVaultClient.getSecret('ALEGRA-API-KEY');
   const user = await keyVaultClient.getSecret('ALEGRA-USER');
   return { 
@@ -415,16 +417,74 @@ server.tool(
     
 }
 
-const main = async () => {
-    const transport = new StdioServerTransport();
+
+//region HTTP Server
+const app = express();
+app.use(express.json());
+const PORT = process.env.PORT || 5050;
+
+app.get('/server', async (req: Request, res: Response) => {
+  res.json({
+    message: 'Alegra MCP Server is running. Send a POST request to this endpoint to connect the MCP server.',
+  });
+})
+
+app.post('/server', async (req: Request, res: Response) => {
+
+  try {
     const creds = await getCredentials();
     alegraClient = new AlegraClient({
         username: creds.user,
         apiToken: creds.apiKey,
     });
-    await getServer().connect(transport);
-}
 
-main().catch((error) => {
-  console.error('Fatal error:', error);
+    const server = getServer();
+    const transport: StreamableHTTPServerTransport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: undefined
+    });
+
+    await server.connect(transport);
+    await transport.handleRequest(req, res, req.body);
+    res.on('close', () => {
+        console.log('Request closed');
+        transport.close();
+        server.close();
+    });
+  } catch (error) {
+    console.error('Error handling request:', error);
+    if (!res.headersSent) {
+        res.status(500).json({
+            jsonrpc: '2.0',
+            error: {
+                code: -32603,
+                message: 'Internal server error'
+            },
+            id: null
+        });
+    }
+  }
 });
+
+
+app.listen(PORT, () => {
+    console.log(`Server started...`);
+});
+//endregion
+
+
+
+//region Mcp Local
+// const main = async () => {
+//     const transport = new StdioServerTransport();
+//     const creds = await getCredentials();
+//     alegraClient = new AlegraClient({
+//         username: creds.user,
+//         apiToken: creds.apiKey,
+//     });
+//     await getServer().connect(transport);
+// }
+
+// main().catch((error) => {
+//   console.error('Fatal error:', error);
+// });
+//endregion
