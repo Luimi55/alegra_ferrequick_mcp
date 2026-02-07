@@ -15,6 +15,7 @@ import 'dotenv/config';
 let alegraClient: AlegraClient = null as any;
 
 async function getCredentials() {
+  console.log("Getting secrets...")
   const keyVaultUrl = process.env.VAULT_BASE_URL || "";
   const azureCredentials = new DefaultAzureCredential();
   const keyVaultClient = new SecretClient(keyVaultUrl, azureCredentials);
@@ -425,7 +426,7 @@ const PORT = process.env.PORT || 5050;
 
 app.get('/server', async (req: Request, res: Response) => {
   res.json({
-    message: 'Alegra MCP Server is running. Send a POST request to this endpoint to connect the MCP server.',
+    message: 'Alegra MCP Server is running',
   });
 })
 
@@ -438,13 +439,17 @@ app.post('/server', async (req: Request, res: Response) => {
         apiToken: creds.apiKey,
     });
 
+    console.log("Getting server...");
     const server = getServer();
     const transport: StreamableHTTPServerTransport = new StreamableHTTPServerTransport({
           sessionIdGenerator: undefined
     });
 
+    console.log("Connecting transport...");
     await server.connect(transport);
     await transport.handleRequest(req, res, req.body);
+    
+    console.log("Closing transport and server...");
     res.on('close', () => {
         console.log('Request closed');
         transport.close();
